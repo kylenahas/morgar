@@ -1,0 +1,241 @@
+#config_version=5
+
+switches:
+  s_left_flipper:
+    number:
+    tags: left_flipper
+  s_right_flipper:
+    number:
+    tags: right_flipper
+  s_plumb_bob_tilt:
+    number: 1
+  s_ball_roll_tilt:
+    number: 2
+  s_credit_button: 
+    number: 3
+  s_outhole:
+    number: 9
+  s_outlane_left:
+    number: 10
+  s_inlane_left:
+    number: 11
+  s_sling_left:
+    number: 12
+  s_standup_lower_left:
+    number: 13
+  s_target_1:
+    number: 14
+  s_saucer:
+    number: 15
+  s_standup_middle_left:
+    number: 16
+  s_standup_upper_left:
+    number: 17
+  s_drop_1_g:
+    number: 18
+  s_drop_1_o:
+    number: 19
+  s_drop_1_r:
+    number: 20
+  s_drop_1_reset:
+    number: 21
+  s_drop_1_standup:
+    number: 22
+  s_magnet_switch:
+    number: 23
+  s_middle_lower_standup:
+    number: 24
+  s_middle_upper_standup:
+    number: 25
+  s_rollover_a:
+    number: 26
+  s_rollover_b:
+    number: 27
+  s_rollover_c:
+    number: 28
+  s_tilt_playfield:
+    number: 29
+  s_spinner:
+    number: 30
+  s_target_2:
+    number: 31
+  s_target_3:
+    number: 32
+  s_target_4:
+    number: 33
+  s_outlane_right:
+    number: 34
+  s_inlane_right:
+    number: 35
+  s_sling_right:
+    number: 36
+  s_bumper_left:
+    number: 37
+  s_bumper_top:
+    number: 38
+  s_bumper_bottom:
+    number: 39
+  s_drop_2_standup:
+    number: 40
+  s_drop_2_g:
+    number: 41
+  s_drop_2_a:
+    number: 42
+  s_drop_2_r:
+    number: 43
+  s_drop_2_reset:
+    number: 44
+
+coils:
+  c_trough:
+    number: 1
+  c_saucer:
+    number: 2
+  c_drop_2_reset:
+    number: 3
+  c_drop_1_reset:
+    number: 4
+  c_magnet_relay:
+    number: 5
+  c_magnet_lamps:
+    number: 6
+  # Coils 9-13 are for sound and are not yet implemented
+  c_knocker:
+    number: 14
+  c_bumper_top:
+    number: 17
+  c_bumper_left:
+    number: 18
+  c_bumper_bottom:
+    number: 19
+  c_sling_left:
+    number: 20
+  c_sling_right:
+    number: 21
+
+lights:
+  l_shoot_again:
+    number: 1:1
+  l_special_left:
+    number: 1:2
+  l_special_right:
+    number: 1:3
+  l_2x:
+    number: 1:4
+  l_3x:
+    number: 1:5
+  l_star_1:
+    number: 1:6
+  l_star_2:
+    number: 1:7
+  l_bonus_1:
+    number: 1:8
+  l_bonus_2:
+    number: 2:1
+  l_bonus_3:
+    number: 2:2
+  l_bonus_4:
+    number: 2:3
+  l_bonus_5:
+    number: 2:4
+  l_bonus_6:
+    number: 2:5
+  l_bonus_7:
+    number: 2:6
+  l_bonus_8:
+    number: 2:7
+  l_bonus_9:
+    number: 2:8
+  l_bonus_10:
+    number: 3:2
+  l_bonus_20:
+    number: 3:3
+  l_rollover_a:
+    number: 3:4
+  l_rollover_b:
+    number: 3:5
+  l_rollover_c:
+    number: 3:6
+  l_rollover_d:
+    number: 3:7
+  l_rollover_e:
+    number: 3:8
+  l_target_1:
+    number: 4:1
+  l_target_2:
+    number: 4:2
+  l_target_3:
+    number: 4:3
+  l_target_4:
+    number: 4:4
+  l_target_1_arrow:
+    number: 4:5
+  l_target_2_arrow:
+    number: 4:6
+  l_target_3_arrow:
+    number: 4:7
+  l_target_4_arrow:
+    number: 4:8
+  l_magnet_5k:
+    number: 5:1
+  l_magnet_10k:
+    number: 5:2
+  l_magnet_20k:
+    number: 5:3
+  l_magnet_30k:
+    number: 5:4
+  l_magnet_50k:
+    number: 5:5
+  l_bumper_top:
+    number: 5:6
+  l_bumper_left:
+    number: 5:7
+  l_bumper_bottom:
+    number: 5:8
+  l_gar_5k_wl:
+    number: 6:1
+  l_drop_1: #GOR
+    number: 6:2
+  l_drop_2: #GAR
+    number: 6:3
+  l_saucer_10k:
+    number: 6:4
+  l_saucer_15k:
+    number: 6:5
+  l_saucer_extra_ball:
+    number: 6:6
+  l_spinner_1k_wl:
+    number: 6:8
+  l_bb_1_can_play:
+    number: 7:2
+  l_bb_2_can_play:
+    number: 7:3
+  l_bb_3_can_play:
+    number: 7:4
+  l_bb_4_can_play:
+    number: 7:5
+  l_bb_match:
+    number: 7:6
+  l_bb_ball_in_play:
+    number: 7:7
+  l_bb_credits:
+    number: 7:8
+  l_bb_player_1:
+    number: 8:1
+  l_bb_player_2:
+    number: 8:2
+  l_bb_player_3:
+    number: 8:3
+  l_bb_player_4:
+    number: 8:4
+  l_bb_tilt:
+    number: 8:5
+  l_bb_game_over:
+    number: 8:6
+  l_bb_shoot_again:
+    number: 8:7
+  l_bb_high_score:
+    number: 8:8
+
+
+
