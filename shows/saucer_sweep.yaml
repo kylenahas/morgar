@@ -1,0 +1,15 @@
+#show_version=5
+- time: 0
+  lights:
+    l_saucer_10k: ff
+    l_saucer_15k: 0
+    l_saucer_extra_ball: 0
+
+- time: '+0.1'
+  lights:
+    l_saucer_15k: ff
+    
+- time: '+0.1'
+  duration: 0.1
+  lights:
+    l_saucer_extra_ball: ff

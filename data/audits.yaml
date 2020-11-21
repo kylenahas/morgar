@@ -1,0 +1,51 @@
+events: {}
+player: {}
+shots:
+  top_lane_a: 28
+  top_lane_b: 21
+  top_lane_c: 22
+switches:
+  s_ball_roll_tilt: 0
+  s_bumper_bottom: 4
+  s_bumper_left: 4
+  s_bumper_top: 3
+  s_credit_button: 6
+  s_drop_1_g: 1
+  s_drop_1_o: 0
+  s_drop_1_r: 0
+  s_drop_1_reset: 1
+  s_drop_1_standup: 0
+  s_drop_2_a: 1
+  s_drop_2_g: 1
+  s_drop_2_r: 1
+  s_drop_2_reset: 0
+  s_drop_2_standup: 0
+  s_flipper_left: 7
+  s_flipper_right: 30
+  s_inlane_left: 7
+  s_inlane_right: 2
+  s_left_flipper: 3
+  s_magnet_switch: 4
+  s_middle_lower_standup: 11
+  s_middle_upper_standup: 6
+  s_outhole: 50
+  s_outlane_left: 7
+  s_outlane_right: 4
+  s_playfield: 0
+  s_plumb_bob_tilt: 0
+  s_right_flipper: 6
+  s_rollover_a: 31
+  s_rollover_b: 24
+  s_rollover_c: 26
+  s_saucer: 1
+  s_sling_left: 9
+  s_sling_right: 15
+  s_spinner: 9
+  s_standup_lower_left: 0
+  s_standup_middle_left: 0
+  s_standup_upper_left: 0
+  s_target_1: 5
+  s_target_2: 9
+  s_target_3: 6
+  s_target_4: 6
+  s_tilt_playfield: 0

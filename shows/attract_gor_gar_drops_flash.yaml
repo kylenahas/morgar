@@ -1,0 +1,11 @@
+#show_version=5
+- time: 0
+  lights:
+    l_drop_1: ff
+    l_drop_2: ff
+
+- time: '+0.5'
+  duration: 0.1
+  lights:
+    l_drop_1: 0
+    l_drop_2: 0

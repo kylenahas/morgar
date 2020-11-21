@@ -1,0 +1,12 @@
+#config_version=5
+mode:
+  start_events: ball_started
+  priority: 100
+
+variable_player:
+  sw_top_rollover:
+    score: 1000
+  sw_bumper:
+    score: 100
+  sw_standup:
+    score: 10

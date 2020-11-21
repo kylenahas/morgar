@@ -1,0 +1,47 @@
+#config_version=5
+mode:
+  start_events: ball_starting, start_mode_top_rollovers
+  stop_events: stop_mode_top_rollovers, ball_will_end
+
+shots:
+  top_lane_a:
+    switch: s_rollover_a
+    profile: top_lane_profile
+    show_tokens:
+      light: l_rollover_a
+  top_lane_b:
+    switch: s_rollover_b
+    profile: top_lane_profile
+    show_tokens:
+      light: l_rollover_b
+  top_lane_c:
+    switch: s_rollover_c
+    profile: top_lane_profile
+    show_tokens:
+      light: l_rollover_c
+
+shot_groups:
+  top_lane_group:
+    shots: top_lane_a, top_lane_b, top_lane_c
+    reset_events: top_lane_group_hit_complete
+    rotate_left_events: s_flipper_left_active
+    rotate_right_events: s_flipper_right_active
+
+shot_profiles:
+  top_lane_profile:
+    states:
+      - name:
+        show: off
+      - name: hit
+        show: on
+
+variable_player:
+  top_lane_group_hit_complete:
+    score: 10000
+    bonus_multiplier: 1
+
+show_player:
+  top_lane_group_hit_complete: 
+    top_rollover_bounce:
+      loops: 6
+      speed: 2

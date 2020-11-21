@@ -1,0 +1,22 @@
+#show_version=5
+- time: 0
+  lights:
+    l_magnet_5k: ff
+    l_magnet_10k: 0
+    l_magnet_20k: 0
+    l_magnet_30k: 0
+    l_magnet_50k: 0
+
+- time: '+0.1'
+  lights:
+    l_magnet_10k: ff
+- time: '+0.1'
+  lights:
+    l_magnet_20k: ff
+- time: '+0.1'
+  lights:
+    l_magnet_30k: ff
+- time: '+0.1'
+  duration: 0.6
+  lights:
+    l_magnet_50k: ff

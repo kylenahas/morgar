@@ -1,0 +1,61 @@
+#config_version=5
+
+show_player:
+  mode_attract_started: 
+    attract_display_loop:
+      loops: -1
+      speed: 1
+    lower_third_sweep:
+      loops: -1
+      speed: 2
+    top_rollover_bounce:
+      loops: -1
+      speed: 1
+    snake_pit_sweep:
+      loops: -1
+      speed: 1
+    saucer_sweep:
+      loops: -1
+      speed: 1
+    bumper_bounce:
+      loops: -1
+      speed: 1
+    attract_arrow_sweep:
+      loops: -1
+      speed: 0.5
+    attract_number_sweep:
+      loops: -1
+      speed: 0.5
+    attract_gor_gar_drops_flash:
+      loops: -1
+      speed: 1
+    attract_gar_wl:
+      loops: -1
+      speed: 1
+    attract_spinner_wl:
+      loops: -1
+      speed: 1
+
+  mode_attract_stopped:
+    attract_display_loop:
+      action: stop
+    lower_third_sweep:
+      action: stop
+    top_rollover_bounce:
+      action: stop
+    snake_pit_sweep:
+      action: stop
+    saucer_sweep:
+      action: stop
+    bumper_bounce:
+      action: stop
+    attract_arrow_sweep:
+      action: stop
+    attract_number_sweep:
+      action: stop
+    attract_gor_gar_drops_flash:
+      action: stop
+    attract_gar_wl:
+      action: stop
+    attract_spinner_wl:
+      action: stop
