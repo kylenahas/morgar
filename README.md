@@ -2,7 +2,9 @@
 
 
 
-**Morgar** is a reimagining of the classic pinball machine Gorgar (Williams, 1979). Gorgar was the first talking pinball machine. It's also the first System 6 game to be used with the *Legacy Pinball Classics Controller* (currently in development). Morgar uses Mission Pinball Framework.
+**Morgar** is a reimagining of the classic pinball machine Gorgar (Williams, 1979). Gorgar was the first talking pinball machine. It's also the first System 6 game to be used with the *Legacy Pinball Classics Controller* (currently in development). Morgar uses the Mission Pinball Framework.
+
+Morgar is currently playable via Visual Pinball X (VPX). To do so, first register the MPF-VPCOM bridge, start `mpf both`, and open the "Gorgar MPF.vpx" file within the /vpx/ directory. Pressing the "1" key starts a game, "Enter" plunges, and Left/Right "Shift" flips.
 
 ## Original Gorgar, rewritten into MPF:
 
