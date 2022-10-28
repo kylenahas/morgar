@@ -1,0 +1,788 @@
+'##################################################################################
+'##################################################################################
+'#####                                                                        #####
+'#####                              ~~ MORGAR ~~                              ##### 
+'#####                                                                        #####
+'#####                                                                        #####
+'##################################################################################
+'##################################################################################
+'
+' This is an example game for the MPF-VPX bridge by jabdoa2 and mfuegemann
+'
+' cGameName will not be checked. The Controller will connect to the MPF currently running
+' 1. start VPX as Administrator
+' 2. start MPF, wait until the display has been initialized 
+' 3. start VPX table
+'
+'
+' What to do in VPX:
+'
+' add Set Controller = CreateObject("MPF.Controller")
+' add a Timer MPFTimer with an interval of 10..50. Keep this well below the minimal default_pulse_ms set in MPF for solenoids
+' add Sub MPFTimer_Timer as it is in the demo
+'
+' in Table_Init 
+' - call Controller.run
+' - set the Trough switch(es) or create balls for the Trough
+' - init NC switches to False
+'
+' in Drain_Hit (for 1-Ball games)
+' - set the Trough switch(es) 
+'
+' to use autofire_coils
+' - add a droppable wall to each bumper. This will be used in Sub CheckAutofireCoils to disable/enable the bumper
+' - if necessary place an invisible wall behind the slingshots to stop the ball once the slingshots are disabled
+' - add each autofire object in VPX to Sub CheckAutofireCoils
+' - use the normal Slingshot_Slingshot and Bumper_Hit events
+'
+' switch handling
+' - add Controller.Switch(MPFSwitchNumber)=SwitchState to the Switch_Hit/_Unhit events. Use "" to include string type numbers
+' - add Controller.PulseSW(MPFSwitchNumber) to the Switch_Hit event of targets, slingshots and bumpers
+' 
+' controlled lights 
+' LEDs and lamps
+' - create a collection "ControlledLamps"
+' - assign all controlled VPX lamps (Matrix, GI, LED, Flashers) to the collection "ControlledLamps" and call InitLamps
+' - in Sub UpdateLamps add a case for every MPF light and LED number, setting the state of the VPX lamp/LED. Use "" to include string type numbers
+'
+' GI strings 
+' - create a collection for each GI string, assign the GI lamps to the collections as needed
+' - assign all GI lamps to the collection "ControlledLamps" and call InitLamps
+' - in Sub UpdateGI add a case for every MPF gi string number, setting the state of the VPX GI collection. Use "" to include string type numbers
+'
+' flashers
+' - assign all flasher lamps to the collection "ControlledLamps" and call InitLamps
+' - in Sub UpdateFlashers add a case for every MPF flasher number, setting the state of the VPX flasher. Use "" to include string type numbers
+'
+' solenoids
+' - add all normal solenoids to the Sub InitSolenoids
+' - in Sub UpdateSolenoids add a case for every MPF coil number, setting the state of the VPX solenoid. Use "" to include string type numbers
+'
+' flippers
+' - add the Flipper routines (Solenoids and KeyUp/KeyDown)
+' 
+' to exit a game shut down the VPX table first
+
+
+Option Explicit
+
+On Error Resume Next
+ExecuteGlobal GetTextFile("controller.vbs")
+If Err Then MsgBox "You need the controller.vbs in order to run this table, available in the vp10 package"
+On Error Goto 0
+
+If Gorgar.ShowDT = false then
+    Scoretext.Visible = false
+End If
+
+Dim EnableBallControl
+EnableBallControl = false 'Change to true to enable manual ball control (or press C in-game) via the arrow keys and B (boost movement) keys
+
+Const BallSize = 25  'Ball radius
+
+Const cGameName = "MorGar"
+
+
+' LoadVPM "01300000","S6.VBS",3.1
+
+'********************************************
+'**     Game Specific Code Starts Here     **
+'********************************************
+
+Const UseSolenoids=1,UseLamps=1,UseSync=1
+Const SSolenoidOn="solon",SSolenoidOff="soloff",SFlipperOn="FlipperUp",SFlipperOff="FlipperDown",SCoin="quarter"
+
+
+'**************************************
+'**     Bind Events To Solenoids     **
+'**************************************
+
+' SolCallback(1)	= "bsTrough.SolOut"
+' SolCallBack(2)	= "bsLKicker.SolOut"
+' SolCallback(3)	= "GARtargets.SolDropUp"
+' SolCallback(4)	= "GORtargets.SolDropUp"
+' SolCallback(5)	= "mMagnet.MagnetOn="
+' SolCallback(6)  = "MagnetFlash"
+' SolCallback(14)	= "vpmSolSound SoundFX(""knocker"",DOFKnocker),"
+' 'SolCallback(17)	= "vpmSolSound SoundFX(""bumper1"",DOFContactors),"  
+' 'SolCallback(18)	= "vpmSolSound SoundFX(""bumper2"",DOFContactors),"  
+' 'SolCallback(19)	= "vpmSolSound SoundFX(""bumper3"",DOFContactors),"  
+' 'SolCallback(20)	= "vpmSolSound SoundFX(""sling"",DOFContactors),"
+' 'SolCallback(21)	= "vpmSolSound SoundFX(""sling"",DOFContactors),"
+' SolCallback(23) = "vpmNudge.SolGameOn"
+' SolCallback(sLRFlipper) = "SolRFlipper"
+' SolCallback(sLLFlipper) = "SolLFlipper"
+
+' Sub SolLFlipper(Enabled)
+' 	If Enabled Then
+' 		PlaySound SoundFX("fx_flipperup",DOFContactors):LeftFlipper.RotateToEnd
+' 	Else
+' 		PlaySound SoundFX("fx_flipperdown",DOFContactors):LeftFlipper.RotateToStart
+' 	End If
+' End Sub
+	  
+' Sub SolRFlipper(Enabled)
+' 	If Enabled Then
+' 		PlaySound SoundFX("fx_flipperup",DOFContactors):RightFlipper.RotateToEnd
+' 	Else
+' 		PlaySound SoundFX("fx_flipperdown",DOFContactors):RightFlipper.RotateToStart
+' 	End If
+' End Sub
+
+' Sub rubber_Hit(idx):PlaySound "rubber":End Sub
+
+
+
+'********************************************
+'**     Init The Table, Start VPinMAME     **
+'********************************************
+ 
+Dim GORtargets,GARtargets,bsLKicker,bsTrough,mtest,mMagnet,BallInPlay,plungerIM,x,ballOut
+
+'### MPF ###
+
+' An error here "Missing Controller" means you need to restart VPX in Administrator mode
+
+Set Controller = CreateObject("MPF.Controller")
+
+Sub Gorgar_Init
+    Controller.GameName="MorGar"
+    Controller.Run 
+    If Err Then MsgBox Err.Description
+    On Error Goto 0
+
+	'### MPF ###
+	'init Trough with correct number of Balls and set Trough switches
+	'Ball 1
+	' BallRelease.createBall
+	' BallRelease.kick 110,1
+
+	'init NC switches
+	' Controller.Switch(12) = False
+
+
+	' #### ORIGINAL VPX ####
+
+	' vpmNudge.TiltObj=Array(LeftSling,RightSling,TopJet,LeftJet,BottomJet)
+
+	' PlaySound "gorgar_feel_my_power"
+	
+	' Set bsTrough=New cvpmBallStack 
+	' 	bsTrough.InitNoTrough BallRelease,9,85,7
+	' 	bsTrough.InitExitSnd SoundFX("Ballrelease",DOFContactors),SoundFX("solon",DOFContactors)
+
+
+	' Set GARtargets=New cvpmDropTarget
+	' 	GARtargets.InitDrop Array(Array(sw41),Array(sw42),Array(sw43)),Array(41,42,43)
+	' 	GARtargets.InitSnd SoundFX("droptargetdown",DOFContactors),SoundFX("droptargetreset",DOFContactors)
+	' 	GARtargets.AllDownSw=44
+
+	' Set GORtargets=New cvpmDropTarget 
+	' 	GORtargets.InitDrop Array(Array(sw18),Array(sw19),Array(sw20)),Array(18,19,20)
+	' 	GORtargets.InitSnd SoundFX("droptargetdown",DOFContactors),SoundFX("droptargetreset",DOFContactors)
+	' 	GORtargets.AllDownSw=21
+		
+	' Set bsLKicker=New cvpmBallStack
+	' 	bsLKicker.InitSaucer sw15,15,155,8
+	' 	bsLKicker.InitExitSnd SoundFX("popper_ball",DOFContactors),SoundFX("solon",DOFContactors)
+		
+	' Set mMagnet=New cvpmMagnet
+ ' 		With mMagnet
+ ' 		.InitMagnet sw23, 26
+	' 	.GrabCenter=False
+ ' 		End With
+
+End Sub
+
+
+'*******************************
+'**     Keyboard Handlers     **
+'*******************************
+
+Sub Gorgar_KeyDown(ByVal KeyCode)
+	'If keycode = LeftFlipperKey Then
+	'	PlaySound "fx_flipperup", 0, .67, -0.05, 0.05
+	'End If
+    
+	'If keycode = RightFlipperKey Then
+	'	PlaySound "fx_flipperup", 0, .67, 0.05, 0.05
+	'End If
+
+	If keycode = PlungerKey Then
+		Plunger.PullBack
+		PlaySound "plungerpull",0,1,0.25,0.25
+	End If
+
+	if keycode = StartGameKey Then
+		Controller.Switch(3) = True
+		Controller.Switch(9) = True
+	End If
+
+	If keycode = LeftFlipperKey Then
+		Controller.Switch(101) = True
+
+		SolLeftFlipper(True)
+
+		' if LeftFlipperActive Then
+		' 	SolLeftFlipper(True)
+		' End If
+	End If
+
+	If keycode = RightFlipperKey Then
+		Controller.Switch(102) = True
+
+		SolRightFlipper(True)
+
+		' if RightFlipperActive Then
+		' 	SolRightFlipper(True)
+		' End If
+	End If
+
+	If keycode = LeftTiltKey Then
+		Nudge 90, 2
+	End If
+
+	If keycode = RightTiltKey Then
+		Nudge 270, 2
+	End If
+
+	If keycode = CenterTiltKey Then
+		Nudge 0, 2
+	End If
+
+
+    ' Manual Ball Control
+	If keycode = 46 Then	 				' C Key
+		If EnableBallControl = 1 Then
+			EnableBallControl = 0
+		Else
+			EnableBallControl = 1
+		End If
+	End If
+    If EnableBallControl = 1 Then
+		If keycode = 48 Then 				' B Key
+			If BCboost = 1 Then
+				BCboost = BCboostmulti
+			Else
+				BCboost = 1
+			End If
+		End If
+		If keycode = 203 Then BCleft = 1	' Left Arrow
+		If keycode = 200 Then BCup = 1		' Up Arrow
+		If keycode = 208 Then BCdown = 1	' Down Arrow
+		If keycode = 205 Then BCright = 1	' Right Arrow
+	End If
+
+    ' If vpmKeyDown(KeyCode) Then Exit Sub 
+End Sub
+
+ 
+Sub Gorgar_KeyUp(ByVal KeyCode)
+	'If keycode = LeftFlipperKey Then
+	'	PlaySound "fx_flipperdown", 0, 1, -0.05, 0.05
+	'End If
+    
+	'If keycode = RightFlipperKey Then
+	'	PlaySound "fx_flipperdown", 0, 1, 0.05, 0.05
+	'End If
+	If keycode = PlungerKey Then
+		Plunger.Fire
+		PlaySound "plunger",0,1,0.25,0.25
+	End If
+    ' If vpmKeyUp(KeyCode) Then Exit Sub  
+
+	if keycode = StartGameKey Then
+		Controller.Switch(3) = False
+		Controller.Switch(9) = False
+	End If
+
+	If keycode = LeftFlipperKey Then
+		Controller.Switch(101) = False
+		SolLeftFlipper(False)
+	End If
+
+	If keycode = RightFlipperKey Then
+		Controller.Switch(102) = False
+		SolRightFlipper(False)	
+	End If
+
+    'Manual Ball Control
+	If EnableBallControl = 1 Then
+		If keycode = 203 Then BCleft = 0	' Left Arrow
+		If keycode = 200 Then BCup = 0		' Up Arrow
+		If keycode = 208 Then BCdown = 0	' Down Arrow
+		If keycode = 205 Then BCright = 0	' Right Arrow
+	End If
+
+End Sub  
+
+
+'*****************************************
+'   rothbauerw's Manual Ball Control
+'*****************************************
+
+Dim BCup, BCdown, BCleft, BCright
+Dim ControlBallInPlay, ControlActiveBall
+Dim BCvel, BCyveloffset, BCboostmulti, BCboost
+
+BCboost = 1				'Do Not Change - default setting
+BCvel = 4				'Controls the speed of the ball movement
+BCyveloffset = -0.01 	'Offsets the force of gravity to keep the ball from drifting vertically on the table, should be negative
+BCboostmulti = 3		'Boost multiplier to ball veloctiy (toggled with the B key) 
+
+ControlBallInPlay = false
+
+Sub StartBallControl_Hit()
+	Set ControlActiveBall = ActiveBall
+	ControlBallInPlay = true
+End Sub
+
+Sub StopBallControl_Hit()
+	ControlBallInPlay = false
+End Sub	
+
+Sub BallControlTimer_Timer()
+	If EnableBallControl and ControlBallInPlay then
+		If BCright = 1 Then
+			ControlActiveBall.velx =  BCvel*BCboost
+		ElseIf BCleft = 1 Then
+			ControlActiveBall.velx = -BCvel*BCboost
+		Else
+			ControlActiveBall.velx = 0
+		End If
+
+		If BCup = 1 Then
+			ControlActiveBall.vely = -BCvel*BCboost
+		ElseIf BCdown = 1 Then
+			ControlActiveBall.vely =  BCvel*BCboost
+		Else
+			ControlActiveBall.vely = bcyveloffset
+		End If
+	End If
+End Sub
+
+
+
+'Lamps + LEDs
+' Top rollover lights are MPF Subtype "matrix"
+' Center running lights are MPF Subtype "led"
+
+Sub UpdateLamps(LampNoPar,StatePar)
+	'add a case for every MPF light number, setting the state of the VPX lamp
+	select Case LampNoPar
+		Case "1:1":	Light1.state  = StatePar  'Same Player Shoots Again (
+		Case "1:2":	Light2.state  = StatePar  'Left Special
+		Case "1:3":	Light3.state  = StatePar  'Right special
+		Case "1:4":	Light4.state  = StatePar  '2X
+		Case "1:5":	Light5.state  = StatePar  '3X
+		Case "1:6":	Light6.state  = StatePar  'Star 1
+		Case "1:7":	Light7.state  = StatePar  'Star 2
+		Case "1:8":	Light8.state  = StatePar  '1,000 Bonus
+		Case "2:1":	Light9.state  = StatePar  '2.000 Bonus
+		Case "2:2":	Light10.state = StatePar  '3,000 Bonus
+		Case "2:3":	Light11.state = StatePar  '4,000 Bonus
+		Case "2:4":	Light12.state = StatePar  '5,000 Bonus
+		Case "2:5":	Light13.state = StatePar  '6,000 Bonus
+		Case "2:6":	Light14.state = StatePar  '7,000 Bonus
+		Case "2:7":	Light15.state = StatePar  '8,000 Bonus
+		Case "2:8":	Light16.state = StatePar  '9,000 Bonus
+		' Case "3:1":	Light17.state = StatePar  ' NOT USED
+		Case "3:2":	Light18.state = StatePar  '10,000 Bonus
+		Case "3:3":	Light19.state = StatePar  '20,000 Bonus
+		Case "3:4":	Light20.state = StatePar  'A
+		Case "3:5":	Light21.state = StatePar  'B
+		Case "3:6":	Light22.state = StatePar  'C
+		Case "3:7":	Light23.state = StatePar  'D
+		Case "3:8":	Light24.state = StatePar  'E
+		Case "4:1":	Light25.state = StatePar  '1 Target
+		Case "4:2":	Light26.state = StatePar  '2 Target
+		Case "4:3":	Light27.state = StatePar  '3 Target
+		Case "4:4":	Light28.state = StatePar  '4 Target
+		Case "4:5":	Light29.state = StatePar  '1 Target Arrow
+		Case "4:6":	Light30.state = StatePar  '2 Target Arrow
+		Case "4:7":	Light31.state = StatePar  '3 Target Arrow
+		Case "4:8":	Light32.state = StatePar  '4 Target Arrow
+		Case "5:1":	Light33.state = StatePar  'Magnet 5,000
+		Case "5:2":	Light34.state = StatePar  'Magnet 10,000
+		Case "5:3":	Light35.state = StatePar  'Magnet 20,000
+		Case "5:4":	Light36.state = StatePar  'Magnet 30,000
+		Case "5:5":	Light37.state = StatePar  'Magnet 50,000
+		Case "5:6":	Light70.state = StatePar  'Top Jet Bumper
+		Case "5:7":	Light71.state = StatePar  'Left Jet Bumper
+		Case "5:8":	Light69.state = StatePar  'Bottom Jet Bumper
+		Case "6:1":	Light41.state = StatePar  'GAR 5,000 When Lit
+		Case "6:2":	Light42.state = StatePar  'GOR
+		Case "6:3":	Light43.state = StatePar  'GAR
+		Case "6:4":	Light44.state = StatePar  'Eject Hole 10,000
+		Case "6:5":	Light45.state = StatePar  'Eject Hole 15,000
+		Case "6:6":	Light46.state = StatePar  'Eject Hole Extra Ball 
+		' Case "6:7":	Light47.state = StatePar  ' NOT USED
+		Case "6:8":	Light48.state = StatePar  'Spinner 1,000 When Lit
+
+
+		' Case "7:1":	Light49.state = StatePar
+		' Case "7:2":	Light50.state = StatePar
+		' Case "7:3":	Light51.state = StatePar
+		' Case "7:4":	Light52.state = StatePar
+		' Case "7:5":	Light53.state = StatePar
+		' Case "7:6":	Light54.state = StatePar
+		' Case "7:7":	Light55.state = StatePar
+		' Case "7:8":	Light56.state = StatePar
+		' Case "8:1":	Light57.state = StatePar
+		' Case "8:2":	Light58.state = StatePar
+		' Case "8:3":	Light59.state = StatePar
+		' Case "8:4":	Light60.state = StatePar
+		' Case "8:5":	Light61.state = StatePar
+		' Case "8:6":	Light62.state = StatePar
+		' Case "8:7":	Light63.state = StatePar
+		' Case "8:8":	Light64.state = StatePar
+		
+	End Select
+End Sub
+
+
+'*****************************
+'**     Switch Handling     ** 
+'*****************************
+ 
+Sub Drain_Hit
+	PlaySound "Drain"
+	Controller.Switch(9) = 1
+	Drain.DestroyBall
+End Sub
+Sub BallRelease_UnHit
+	Set BallInPlay = ActiveBall
+	Controller.Switch(9) = 0
+End Sub				
+Sub LeftSling_Slingshot   : Controller.PulseSW(12) : End Sub
+Sub RightSling_Slingshot   : Controller.PulseSW(36) : End Sub
+Sub sw13_Slingshot   : Controller.PulseSW(13) : End Sub
+Sub sw16_Slingshot   : Controller.PulseSW(16) : End Sub
+Sub sw17_Slingshot   : Controller.PulseSW(17) : End Sub
+Sub sw22_Slingshot   : Controller.PulseSW(22) : End Sub
+Sub sw24_Slingshot   : Controller.PulseSW(24) : End Sub
+Sub sw25_Slingshot   : Controller.PulseSW(25) : End Sub
+Sub sw40_Slingshot   : Controller.PulseSW(40) : End Sub
+Sub sw30_Spin : Controller.PulseSW(30) : End Sub
+
+
+
+' Sub sw15_Hit
+' 	' sol2(True)
+' 	' bsLKicker.AddBall 0
+' End Sub 				'switch 15
+
+Sub sw15_Hit:   Controller.Switch(15)=1 : End Sub
+' Sub sw15_unHit: Controller.Switch(15)=0 : End Sub
+
+' Drop 2 Targets:
+' Needs to be reworked to be more true to game (Pulse on drop, series switch when complete, but MPF doesn't support this well yet)
+Sub sw18_Hit:   Controller.Switch(18)=1 : End Sub
+Sub sw18_unHit: Controller.Switch(18)=0 : End Sub
+Sub sw19_Hit:   Controller.Switch(19)=1 : End Sub
+Sub sw19_unHit: Controller.Switch(19)=0 : End Sub
+Sub sw20_Hit:   Controller.Switch(20)=1 : End Sub
+Sub sw20_unHit: Controller.Switch(20)=0 : End Sub
+
+
+Sub sw23_Hit:   Controller.Switch(23)=1 : End Sub
+Sub sw23_UnHit: Controller.Switch(23)=0 : End Sub
+Sub LeftJet_Hit : Controller.PulseSW(37) : End Sub
+Sub TopJet_Hit : Controller.PulseSW(38) : End Sub
+Sub BottomJet_Hit : Controller.PulseSW(39) : End Sub
+
+' Drop 1 Targets:
+' Needs to be reworked to be more true to game (Pulse on drop, series switch when complete, but MPF doesn't support this well yet)
+Sub sw41_Hit   : Controller.Switch(41)=1 : End Sub                       'switch 41
+Sub sw41_unHit : Controller.Switch(41)=0 : End Sub                       'switch 41
+Sub sw42_Hit   : Controller.Switch(42)=1 : End Sub                       'switch 42
+Sub sw42_unHit : Controller.Switch(42)=0 : End Sub                       'switch 42
+Sub sw43_Hit   : Controller.Switch(43)=1 : End Sub                       'switch 43
+Sub sw43_unHit : Controller.Switch(43)=0 : End Sub                       'switch 43
+
+dim intensScale:intensScale=0
+dim scaleStep:scaleStep=0.8
+ Sub MagnetFlash(Enabled)
+		If Enabled Then
+			pitLamp.state=1
+			pitLamp2.state=1
+			pitLamp3.state=1
+			intensScale = intensScale + scaleStep
+			if intensScale>=1.0 Then intensScale=1.0 
+			pitLamp.IntensityScale = intensScale
+			pitLamp2.IntensityScale = intensScale
+			pitLamp3.IntensityScale = intensScale
+		Else
+			intensScale = intensScale - scaleStep
+			if intensScale<0.0 then intensScale=0.0:pitLamp.state=0:pitLamp2.state=0:pitLamp3.state=0:end if
+			pitLamp.IntensityScale = intensScale
+			pitLamp2.IntensityScale = intensScale
+			pitLamp3.IntensityScale = intensScale
+		End If
+ End Sub
+
+Sub sw10_Hit:   Controller.Switch(10)=1 : End Sub
+Sub sw10_unHit: Controller.Switch(10)=0 : End Sub
+Sub sw11_Hit:   Controller.Switch(11)=1 : End Sub
+Sub sw11_unHit: Controller.Switch(11)=0 : End Sub
+
+' These targets only receive hit events (not unhit), so must be pulsed.
+' Sub sw14_Hit:   Controller.Switch(14)=1 : End Sub
+' Sub sw14_unHit: Controller.Switch(14)=0 : End Sub
+' Sub sw31_Hit:   Controller.Switch(31)=1 : End Sub
+' Sub sw31_unHit: Controller.Switch(31)=0 : End Sub
+' Sub sw32_Hit:   Controller.Switch(32)=1 : End Sub
+' Sub sw32_unHit: Controller.Switch(32)=0 : End Sub
+' Sub sw33_Hit:   Controller.Switch(33)=1 : End Sub
+' Sub sw33_unHit: Controller.Switch(33)=0 : End Sub
+
+Sub sw14_Hit:   Controller.PulseSW(14) : End Sub
+Sub sw31_Hit:   Controller.PulseSW(31) : End Sub
+Sub sw32_Hit:   Controller.PulseSW(32) : End Sub
+Sub sw33_Hit:   Controller.PulseSW(33) : End Sub
+
+
+Sub sw34_Hit:   Controller.Switch(34)=1 : End Sub
+Sub sw34_unHit: Controller.Switch(34)=0 : End Sub
+Sub sw35_Hit:   Controller.Switch(35)=1 : End Sub
+Sub sw35_unHit: Controller.Switch(35)=0 : End Sub
+Sub sw24_Hit:   Controller.Switch(26)=1 : End Sub
+Sub sw24_unHit: Controller.Switch(26)=0 : End Sub
+Sub sw27_Hit:   Controller.Switch(27)=1 : End Sub
+Sub sw27_unHit: Controller.Switch(27)=0 : End Sub
+Sub sw28_Hit:   Controller.Switch(28)=1 : End Sub
+Sub sw28_unHit: Controller.Switch(28)=0 : End Sub
+
+
+'-----------------------------------
+'------  Solenoid Assignment  ------
+'-----------------------------------
+
+'Sol1 Ball Release
+Sub Sol1(enabled)
+	if enabled Then
+		BallRelease.CreateBall
+		BallRelease.Kick 80, 5
+	end If		
+End Sub
+
+'Sol2 Saucer
+Sub Sol2(enabled)
+	if enabled Then
+		Controller.Switch(15)=0
+		sw15.kick 160, 1
+	end If		
+End Sub
+
+'Sol3 Drop 2 Reset
+Sub Sol3(enabled)
+	if enabled Then
+		sw41.IsDropped = False
+		sw42.IsDropped = False
+		sw43.IsDropped = False
+		Controller.Switch(41)=0
+		Controller.Switch(42)=0
+		Controller.Switch(43)=0
+	end If		
+End Sub
+
+'Sol4 Drop 1 Reset
+Sub Sol4(enabled)
+	if enabled Then
+		sw18.IsDropped = False
+		sw19.IsDropped = False
+		sw20.IsDropped = False
+		Controller.Switch(18)=0
+		Controller.Switch(19)=0
+		Controller.Switch(20)=0
+	end If		
+End Sub
+
+
+
+
+
+
+'GI
+' The four bulbs below the slingshots are MPF Subtype "gi"
+Sub UpdateGI(GIStringPar,StatePar)
+	'add a case for every MPF GI string number, setting the state of the VPX lamp/collection
+	Dim obj
+	select Case GIStringPar
+		Case "gi1":
+			for each obj in GI
+				obj.state = StatePar
+			Next
+	End Select
+End Sub
+
+
+'Flashers
+' The right hole light is of MPF Subtype "flasher"
+Sub UpdateFlashers(FlasherNoPar,StatePar)
+	select Case FlasherNoPar
+		Case "2":	LHole.state = StatePar
+	End Select
+End Sub
+
+
+Sub InitLamps
+	'assign all controlled VPX lamps to the collection "ControlledLamps"
+	Dim obj
+	for each obj in ControlledLamps
+		obj.state = 0
+	Next
+	Dim gi
+	for each gi in gis
+		gi.state = 1
+	Next
+End Sub
+
+
+'Solenoids 
+'normal solenoids, autofire_coils are handled separately 
+
+Sub UpdateSolenoids(SolNoPar,StatePar)
+	'add a case for every MPF coil number, setting the state of the VPX solenoid
+	select Case SolNoPar
+		Case "1":	Sol1(StatePar)	'Ball Release
+		Case "2":	Sol2(StatePar)	'Saucer
+		Case "3":	Sol3(StatePar)	'Drop Reset 2
+		Case "4":	Sol4(StatePar)	'Drop Reset 1
+	End Select
+End Sub
+
+Sub InitSolenoids
+	'add a call for every normal VPX Solenoid 
+	Sol1(False)	'Ball Release
+	Sol2(False)	'Saucer
+	' Sol7(False)	'Auto-Plunger
+	' Sol8(False)	'Right Hole
+End Sub
+
+
+Dim LeftSlingActive, RightSlingActive, TroughEjectActive, BumperActive, LeftFlipperActive, RightFlipperActive
+
+'Approach A - check each autofire coil (prefered)
+
+Sub CheckAutofireCoils
+	LeftFlipperActive = Controller.IsCoilActive("101")
+	RightFlipperActive = Controller.IsCoilActive("102")
+	TroughEjectActive = Controller.IsCoilActive("1")
+	' LeftSlingActive = controller.IsCoilActive("coil4")
+	' RightSlingActive = controller.IsCoilActive("coil5")
+	' BumperActive = controller.IsCoilActive("coil6")
+
+	' LeftFlipper.enabled = LeftFlipperActive
+	' if not LeftFlipperActive Then
+	' 	SolLeftFlipper(False)
+	' end If
+	' RightFlipper.enabled = RightFlipperActive 
+	' if not RightFlipperActive Then
+	' 	SolRightFlipper(False)
+	' end If
+	' LeftSlingShot.collidable = LeftSlingActive 	
+	' RightSlingShot.collidable = RightSlingActive 	
+	' Bumper1Wall.isdropped = BumperActive 	
+End Sub
+
+
+'Flippers are handled as autofire_coils
+
+'Left Flipper
+Dim LFlipperWasUp:LFlipperWasUp=False
+Sub SolLeftFlipper(enabled)
+	if enabled Then
+		if not LFlipperWasUp then
+			LFlipperWasUp = True
+			LeftFlipper.RotateToEnd
+			' PlaySound SoundFX("fx_flipperup",DOFFlippers), 0, .67, AudioPan(LeftFlipper), 0.05,0,0,1,AudioFade(LeftFlipper)
+		end If
+	else
+		if LFlipperWasUp then
+			LFlipperWasUp = False
+			LeftFlipper.RotateToStart
+			' PlaySound SoundFX("fx_flipperdown",DOFFlippers), 0, 1, AudioPan(LeftFlipper), 0.05,0,0,1,AudioFade(LeftFlipper)
+		end If
+	end If		
+End Sub
+
+'Right Flipper
+Dim RFlipperWasUp:RFlipperWasUp=False
+Sub SolRightFlipper(enabled)
+	if enabled Then
+		if not RFlipperWasUp then
+			RFlipperWasUp = True
+			RightFlipper.RotateToEnd
+			' PlaySound SoundFX("fx_flipperup",DOFFlippers), 0, .67, AudioPan(RightFlipper), 0.05,0,0,1,AudioFade(RightFlipper)
+		end If
+	else
+		if RFlipperWasUp then
+			RFlipperWasUp = False
+			RightFlipper.RotateToStart
+			' PlaySound SoundFX("fx_flipperdown",DOFFlippers), 0, 1, AudioPan(RightFlipper), 0.05,0,0,1,AudioFade(RightFlipper)
+		end If	
+	end If		
+End Sub
+
+
+
+'--------------------------
+'------  MPF Update  ------
+'--------------------------
+'ChgObj(ii,0) --> Number
+'ChgObj(ii,1) --> State
+
+InitLamps()
+InitSolenoids()
+
+Sub MPFTimer_Timer
+	Dim ii,ChgLamp,ChgGIString,ChgSol,ChgLED,ChgFlasher
+
+	'Process Changed Lights
+	ChgLamp = Controller.ChangedLamps
+	if not isempty(ChgLamp) Then	
+		for ii=0 to UBound(ChgLamp)
+			UpdateLamps ChgLamp(ii,0), ChgLamp(ii,1)
+		Next
+	end If
+
+	'Process Changed LEDs
+	ChgLED = Controller.ChangedLEDs
+	if not isempty(ChgLED) Then	
+		for ii=0 to UBound(ChgLED)
+			UpdateLamps ChgLED(ii,0), ChgLED(ii,1)
+		Next
+	end If
+
+	'Process Changed Flashers
+	ChgFlasher = Controller.ChangedFlashers
+	if not isempty(ChgFlasher) Then	
+		for ii=0 to UBound(ChgFlasher)
+			' UpdateFlashers ChgFlasher(ii,0), ChgFlasher(ii,1)
+		Next
+	end If
+
+	'Process Changed GI Strings
+	ChgGIString = Controller.ChangedGIStrings
+	if not isempty(ChgGIString) Then	
+		for ii=0 to UBound(ChgGIString)
+			' UpdateGI ChgGIString(ii,0), ChgGIString(ii,1)
+		Next
+	end If
+
+	'Process Changed Solenoids (only non Autofire Coils)
+	ChgSol = Controller.ChangedSolenoids
+	if not isempty(ChgSol) Then	
+		for ii=0 to UBound(ChgSol)
+			UpdateSolenoids ChgSol(ii,0), ChgSol(ii,1)
+		Next
+	end If
+ 
+	'Process Hardware Rules to enable Autofire Coils
+	CheckAutofireCoils
+	'or
+	'ProcessHardwareRules
+
+	' UpdateStatusLights
+End Sub
