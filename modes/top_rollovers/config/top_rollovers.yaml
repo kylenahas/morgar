@@ -2,6 +2,7 @@
 mode:
   start_events: ball_starting, start_mode_top_rollovers
   stop_events: stop_mode_top_rollovers, ball_will_end
+  priority: 150
 
 shots:
   top_lane_a:
@@ -36,12 +37,22 @@ shot_profiles:
         show: on
 
 variable_player:
+  mode_top_rollovers_started:
+    bonus_multiplier:
+      int: 1
+      action: set
   top_lane_group_hit_complete:
     score: 10000
-    bonus_multiplier: 1
+    bonus_multiplier: 1 if (current_player.bonus_multiplier < 3) else 0
 
 show_player:
   top_lane_group_hit_complete: 
     top_rollover_bounce:
       loops: 6
       speed: 2
+
+light_player:
+  "{current_player.bonus_multiplier > 1}":
+    l_2x: ff
+  "{current_player.bonus_multiplier > 2}":
+    l_3x: ff

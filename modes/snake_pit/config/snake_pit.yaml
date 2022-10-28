@@ -1,0 +1,5 @@
+#config_version=5
+mode:
+  start_events: ball_starting, start_mode_number_targets, number_target_group_lit_complete, number_target_group_flash_complete
+  stop_events: stop_mode_number_targets, ball_will_end
+  priority: 150

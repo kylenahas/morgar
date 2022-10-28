@@ -4,9 +4,78 @@ mode:
   priority: 100
 
 variable_player:
+  mode_base_started:
+    bonus:
+      int: 1
+      action: set
+    spinner_lit:
+      int: 0
+      action: set
   sw_top_rollover:
     score: 1000
+  # s_rollover_b_active:
+  #   bonus: 2
+  sw_top_magnet:
+    score: 1000
+  sw_drop_target:
+    score: 1000
+  sw_drop_target_series:
+    score: 5000
+  sw_outlane:
+    score: 5000
+  sw_inlane:
+    score: 3000
   sw_bumper:
     score: 100
-  sw_standup:
+  sw_slingshot:
     score: 10
+  sw_number_target:
+    score: 1000
+  s_spinner_active:
+    score: 100 if (current_player.spinner_lit < 1) else 1000
+  s_saucer_active:
+    score: 5000
+  sw_standup_mid:
+    score: 50
+  sw_standup_low:
+    score: 10
+  sw_bonus1:
+    bonus: 1 if (current_player.bonus < 29) else 0
+  sw_bonus3:
+    bonus: 3 if (current_player.bonus < 27) else 0
+  player_bonus{current_player.bonus > 9 and current_player.bonus < 20 and current_player.spinner_lit < 1}:
+    spinner_lit: 
+      int: 1
+      action: set
+  player_bonus{current_player.bonus > 19 and current_player.spinner_lit == 1}:
+    spinner_lit:
+      int: 0
+      action: set
+
+
+
+light_player:
+  "{(current_player.bonus % 10) > 0}":
+    l_bonus_1: ff
+  "{(current_player.bonus % 10) > 1}":
+    l_bonus_2: ff
+  "{(current_player.bonus % 10) > 2}":
+    l_bonus_3: ff
+  "{(current_player.bonus % 10) > 3}":
+    l_bonus_4: ff
+  "{(current_player.bonus % 10) > 4}":
+    l_bonus_5: ff
+  "{(current_player.bonus % 10) > 5}":
+    l_bonus_6: ff
+  "{(current_player.bonus % 10) > 6}":
+    l_bonus_7: ff
+  "{(current_player.bonus % 10) > 7}":
+    l_bonus_8: ff
+  "{(current_player.bonus % 10) > 8}":
+    l_bonus_9: ff
+  "{current_player.bonus > 9 and current_player.bonus < 20}":
+    l_bonus_10: ff
+  "{current_player.bonus > 19}":
+    l_bonus_20: ff
+  "{current_player.spinner_lit > 0}":
+    l_spinner_1k_wl: ff

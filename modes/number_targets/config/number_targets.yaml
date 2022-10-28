@@ -1,0 +1,69 @@
+#config_version=5
+mode:
+  start_events: ball_starting, start_mode_number_targets
+  stop_events: stop_mode_number_targets, ball_will_end
+  priority: 150
+
+
+shows: 
+  unlit_number_target:
+    - time: 0
+      lights:
+        (light): 0
+  lit_number_target:
+    - time: 0
+      lights:
+        (light): ff
+  flashing_number_target:
+    - time: 0
+      lights:
+        (light): 0
+    - time: '+0.25'
+      duration: 0.25
+      lights:
+        (light): ff
+
+
+shots:
+  target_1:
+    switch: s_target_1
+    show_tokens:
+      light: l_target_1
+    profile: number_target
+  target_2:
+    switch: s_target_2
+    show_tokens:
+      light: l_target_2
+    profile: number_target
+  target_3:
+    switch: s_target_3
+    show_tokens:
+      light: l_target_3
+    profile: number_target
+  target_4:
+    switch: s_target_4
+    show_tokens:
+      light: l_target_4
+    profile: number_target
+
+
+shot_groups:
+  number_target_group:
+    debug: true
+    shots: target_1, target_2, target_3, target_4
+    restart_events: number_target_group_lit_complete, number_target_group_flash_complete
+
+
+shot_profiles:
+  number_target:
+    states:
+      - name: unlit
+        show: unlit_number_target
+      - name: lit
+        show: lit_number_target
+      - name: flash
+        show: flashing_number_target
+        sync_ms: 250
+    loop: false
+
+

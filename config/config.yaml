@@ -1,5 +1,8 @@
 #config_version=5
 
+hardware: 
+    platform: virtual_pinball
+
 playfields:
     playfield:
         default_source_device: bd_trough
@@ -9,8 +12,38 @@ ball_devices:
     bd_trough:
         eject_coil: c_trough
         ball_switches: s_outhole
+        entrance_count_delay: 300ms
         debug: true
         tags: trough, drain, home
+    bd_saucer:
+        eject_coil: c_saucer
+        ball_switches: s_saucer
+        eject_timeouts: 500ms
+
+drop_targets:
+  drop_1_g:
+    switch: s_drop_1_g
+  drop_1_o:
+    switch: s_drop_1_o
+  drop_1_r:
+    switch: s_drop_1_r
+
+  drop_2_g:
+    switch: s_drop_2_g
+  drop_2_a:
+    switch: s_drop_2_a
+  drop_2_r:
+    switch: s_drop_2_r
+
+drop_target_banks:
+  gor_bank:
+    drop_targets: drop_1_g, drop_1_o, drop_1_r
+    reset_coils: c_drop_1_reset
+    reset_on_complete: 1s
+  gar_bank:
+    drop_targets: drop_2_g, drop_2_a, drop_2_r
+    reset_coils: c_drop_2_reset
+    reset_on_complete: 1s
 
 keyboard:
   s:
@@ -21,6 +54,8 @@ keyboard:
 modes:
   - base
   - top_rollovers
+  - number_targets
+  - tilt
 
 virtual_platform_start_active_switches:
     s_outhole
@@ -39,9 +74,9 @@ slides:
         min_digits: 2
         font_name: ten_segment
         color: orange
-        x: 620
-        y: 724
-        font_size: 240
+        x: 60
+        y: 70
+        font_size: 12
         anchor_x: right
         anchor_y: bottom
         z: 2
@@ -56,39 +91,46 @@ slide_player:
 
 switches:
   s_flipper_left:
-    number:
+    number: 101
     tags: left_flipper
   s_flipper_right:
-    number:
+    number: 102
     tags: right_flipper
   s_plumb_bob_tilt:
     number: 1
+    tags: tilt_warning
   s_ball_roll_tilt:
     number: 2
+    tags: slam_tilt
   s_credit_button: 
     number: 3
     tags: start
   s_outhole:
     number: 9
+    tags: bonus1
   s_outlane_left:
     number: 10
+    tags: outlane, bonus1
   s_inlane_left:
     number: 11
+    tags: inlane, bonus1
   s_sling_left:
     number: 12
+    tags: slingshot
   s_standup_lower_left:
     number: 13
     tags: standup
   s_target_1:
     number: 14
+    tags: number_target, bonus1
   s_saucer:
     number: 15
   s_standup_middle_left:
     number: 16
-    tags: standup
+    tags: standup_mid
   s_standup_upper_left:
     number: 17
-    tags: standup
+    tags: standup_mid
   s_drop_1_g:
     number: 18
   s_drop_1_o:
@@ -103,35 +145,42 @@ switches:
     number: 23
   s_middle_lower_standup:
     number: 24
-    tags: standup
+    tags: standup_low
   s_middle_upper_standup:
     number: 25
-    tags: standup
+    tags: standup_low
   s_rollover_a:
     number: 26
-    tags: top_rollover
+    tags: top_rollover, bonus1
   s_rollover_b:
     number: 27
-    tags: top_rollover
+    tags: top_rollover, bonus3
   s_rollover_c:
     number: 28
-    tags: top_rollover
+    tags: top_rollover, bonus1
   s_tilt_playfield:
     number: 29
+    tags: slam_tilt
   s_spinner:
     number: 30
   s_target_2:
     number: 31
+    tags: number_target, bonus1
   s_target_3:
     number: 32
+    tags: number_target, bonus1
   s_target_4:
     number: 33
+    tags: number_target, bonus1
   s_outlane_right:
     number: 34
+    tags: outlane, bonus1
   s_inlane_right:
     number: 35
+    tags: inlane, bonus1
   s_sling_right:
     number: 36
+    tags: slingshot
   s_bumper_left:
     number: 37
     tags: bumper
@@ -153,18 +202,22 @@ switches:
   s_drop_2_reset:
     number: 44
   s_playfield:
-    number:
+    number: 100
     tags: playfield_active
 
 coils:
   c_trough:
     number: 1
+    default_pulse_ms: 100 
   c_saucer:
     number: 2
+    default_pulse_ms: 100
   c_drop_2_reset:
     number: 3
+    default_pulse_ms: 200
   c_drop_1_reset:
     number: 4
+    default_pulse_ms: 200
   c_magnet_relay:
     number: 5
   c_magnet_lamps:
@@ -182,6 +235,11 @@ coils:
     number: 20
   c_sling_right:
     number: 21
+  # These are not real coils but exist for MPF-VPX-Bridge
+  c_left_flipper:
+    number: 101
+  c_right_flipper:
+    number: 102
 
 light_settings:
   default_fade_ms: 40
