@@ -1,4 +1,6 @@
 #config_version=5
+
+##! mode: top_rollovers
 mode:
   start_events: ball_starting, start_mode_top_rollovers
   stop_events: stop_mode_top_rollovers, ball_will_end
@@ -20,6 +22,14 @@ shots:
     profile: top_lane_profile
     show_tokens:
       light: l_rollover_c
+  inlane_d:
+    switch: s_inlane_left
+    show_tokens:
+      light: l_rollover_d
+  inlane_e:
+    switch: s_inlane_right
+    show_tokens:
+      light: l_rollover_e
 
 shot_groups:
   top_lane_group:

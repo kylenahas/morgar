@@ -11,6 +11,13 @@ variable_player:
     spinner_lit:
       int: 0
       action: set
+    star_level:
+      int: 0
+      action: set
+    eject_hole_level:
+      int: 0
+      action: set
+    
   sw_top_rollover:
     score: 1000
   # s_rollover_b_active:
@@ -43,6 +50,10 @@ variable_player:
     bonus: 1 if (current_player.bonus < 29) else 0
   sw_bonus3:
     bonus: 3 if (current_player.bonus < 27) else 0
+  sw_bonus3{current_player.bonus < 29 and current_player.bonus >= 27}:
+    bonus:
+      int: 29
+      action: set
   player_bonus{current_player.bonus > 9 and current_player.bonus < 20 and current_player.spinner_lit < 1}:
     spinner_lit: 
       int: 1

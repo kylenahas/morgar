@@ -1,7 +1,9 @@
 #config_version=5
+##! mode: number_targets
 mode:
   start_events: ball_starting, start_mode_number_targets
   stop_events: stop_mode_number_targets, ball_will_end
+  restart_on_next_ball: true
   priority: 150
 
 
@@ -53,6 +55,21 @@ shot_groups:
     shots: target_1, target_2, target_3, target_4
     restart_events: number_target_group_lit_complete, number_target_group_flash_complete
 
+# variable_player:
+#   number_target_group_lit_complete{current_player.star_level < 3}:
+#     star_level: 1
+#   number_target_group_flash_complete{current_player.star_level < 3}:
+#     star_level: 1
+
+
+counters:
+  star_light_level:
+    starting_count: 0
+    count_complete_value: 3
+    count_events: number_target_group_lit_complete, number_target_group_flash_complete
+    events_when_complete: start_mode_number_specials
+    reset_on_complete: false
+
 
 shot_profiles:
   number_target:
@@ -66,4 +83,15 @@ shot_profiles:
         sync_ms: 250
     loop: false
 
+# light_player:
+#   "{(current_player.star_level) > 0}":
+#     l_star_1: ff
+#   "{(current_player.star_level) > 1}":
+#     l_star_2: ff
 
+
+light_player:
+  "{(device.counters.star_light_level.value) > 0}":
+    l_star_1: ff
+  "{(device.counters.star_light_level.value) > 1}":
+    l_star_2: ff

@@ -1,0 +1,43 @@
+#config_version=5
+
+##! mode: gor_gar
+mode:
+  start_events: ball_starting
+  stop_events: ball_will_end
+  restart_on_next_ball: false
+  priority: 150
+
+shows: 
+  unlit:
+    - time: 0
+      lights:
+        (light): 0
+  lit:
+    - time: 0
+      lights:
+        (light): ff
+
+shots:
+  gor_drop:
+    hit_events: drop_target_bank_gor_bank_down
+    show_tokens: 
+      light: l_drop_1
+    profile: gor_gar_light
+  gar_drop:
+    hit_events: drop_target_bank_gar_bank_down
+    show_tokens:  
+      light: l_drop_2
+    profile: gor_gar_light
+
+shot_groups:
+  drop_target_group:
+    shots: gor_drop, gar_drop
+    restart_events: drop_target_group_lit_complete
+
+shot_profiles:
+  gor_gar_light:
+    states:
+      - name: unlit
+        show: unlit
+      - name: lit
+        show: lit

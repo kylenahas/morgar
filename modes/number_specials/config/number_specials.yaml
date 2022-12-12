@@ -1,0 +1,91 @@
+#config_version=5
+
+##! mode: number_specials
+mode:
+  start_events: start_mode_number_specials
+  stop_events: ball_will_end, mode_award_credit_started
+  restart_on_next_ball: false
+  priority: 200
+
+event_player:
+  number_special_group_lit_hit:
+    - start_mode_award_credit
+
+  
+shows: 
+  unlit_number_arrow:
+    - time: 0
+      lights:
+        (light): 0
+  lit_number_arrow:
+    - time: 0
+      lights:
+        (light): ff
+
+
+shots:
+  target_1_special:
+    switch: s_target_1
+    show_tokens:
+      light: l_target_1_arrow
+    profile: number_special
+    advance_events: mode_number_specials_started
+  target_2_special:
+    switch: s_target_2
+    show_tokens:
+      light: l_target_2_arrow
+    profile: number_special
+  target_3_special:
+    switch: s_target_3
+    show_tokens:
+      light: l_target_3_arrow
+    profile: number_special
+  target_4_special:
+    switch: s_target_4
+    show_tokens:
+      light: l_target_4_arrow
+    profile: number_special
+
+
+shot_groups:
+  number_special_group:
+    debug: true
+    shots: target_1_special, target_2_special, target_3_special, target_4_special
+    restart_events: number_target_group_lit_complete
+    rotate_right_events: timer_special_rotator_tick
+
+
+# variable_player:
+#   number_target_group_lit_complete{current_player.star_level < 3}:
+#     star_level: 1
+#   number_target_group_flash_complete{current_player.star_level < 3}:
+#     star_level: 1
+
+
+shot_profiles:
+  number_special:
+    advance_on_hit: false
+    states:
+      - name: unlit
+        show: unlit_number_arrow
+      - name: lit
+        show: lit_number_arrow
+    loop: false
+
+timers:
+  special_rotator:
+    tick_interval: 1s
+    control_events:
+      - action: start
+        event: mode_number_specials_started
+      - action: stop
+        event: mode_number_specials_will_stop
+
+
+
+
+# light_player:
+#   "{(current_player.star_level) > 0}":
+#     l_star_1: ff
+#   "{(current_player.star_level) > 1}":
+#     l_star_2: ff

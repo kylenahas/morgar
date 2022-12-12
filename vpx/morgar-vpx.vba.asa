@@ -563,7 +563,7 @@ Sub Sol1(enabled)
 	if enabled Then
 		BallRelease.CreateBall
 		BallRelease.Kick 80, 5
-	end If		
+	end if		
 End Sub
 
 'Sol2 Saucer
@@ -571,7 +571,7 @@ Sub Sol2(enabled)
 	if enabled Then
 		Controller.Switch(15)=0
 		sw15.kick 160, 1
-	end If		
+	end if		
 End Sub
 
 'Sol3 Drop 2 Reset
@@ -583,7 +583,7 @@ Sub Sol3(enabled)
 		Controller.Switch(41)=0
 		Controller.Switch(42)=0
 		Controller.Switch(43)=0
-	end If		
+	end if		
 End Sub
 
 'Sol4 Drop 1 Reset
@@ -595,13 +595,33 @@ Sub Sol4(enabled)
 		Controller.Switch(18)=0
 		Controller.Switch(19)=0
 		Controller.Switch(20)=0
-	end If		
+	end if		
 End Sub
 
+'Sol5 Magnet Relay
+Sub Sol5(enabled)
+	if enabled Then
+		magnet_relay.enabled = True
+	else 
+		magnet_relay.Kick 160, 0.3
+		magnet_relay.enabled = False
+	end if
+End Sub
 
+'Sol6 Magnet Flasher
+Sub Sol6(enabled)
+	' MagnetFlash(enabled)
+	if enabled Then
+		pitLamp.state=1
+		pitLamp2.state=1
+		pitLamp3.state=1
+	else
+		pitLamp.state=0
+		pitLamp2.state=0
+		pitLamp3.state=0
+	end if
 
-
-
+End Sub
 
 'GI
 ' The four bulbs below the slingshots are MPF Subtype "gi"
@@ -649,6 +669,8 @@ Sub UpdateSolenoids(SolNoPar,StatePar)
 		Case "2":	Sol2(StatePar)	'Saucer
 		Case "3":	Sol3(StatePar)	'Drop Reset 2
 		Case "4":	Sol4(StatePar)	'Drop Reset 1
+		Case "5":	Sol5(StatePar)	'Magnet Hold Relay
+		Case "6":	Sol6(StatePar)	'Magnet Flasher Lamps
 	End Select
 End Sub
 
@@ -656,6 +678,10 @@ Sub InitSolenoids
 	'add a call for every normal VPX Solenoid 
 	Sol1(False)	'Ball Release
 	Sol2(False)	'Saucer
+	Sol3(False)	'Drop Reset 2
+	Sol4(False)	'Drop Reset 1
+	Sol5(False)	'Magnet Hold Relay
+	' Sol6(False)	'Magnet Flasher Lamps
 	' Sol7(False)	'Auto-Plunger
 	' Sol8(False)	'Right Hole
 End Sub

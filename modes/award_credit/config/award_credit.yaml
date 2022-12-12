@@ -1,0 +1,12 @@
+#config_version=5
+
+##! mode: award_credit
+
+mode:
+  start_events: start_mode_award_credit
+  stop_events: ball_will_end, mode_award_credit_started
+  restart_on_next_ball: false
+  priority: 1000
+
+coil_player:
+  mode_award_credit_started: c_knocker

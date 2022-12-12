@@ -1,5 +1,38 @@
 #config_version=5
+##! mode: snake_pit
 mode:
-  start_events: ball_starting, start_mode_number_targets, number_target_group_lit_complete, number_target_group_flash_complete
-  stop_events: stop_mode_number_targets, ball_will_end
-  priority: 150
+  start_events: number_target_group_lit_complete, number_target_group_flash_complete
+  stop_events: show_pit_flasher_end
+  restart_on_next_ball: true
+  priority: 200
+
+
+shows:
+  snake_pit_flasher:
+    - time: 0
+      duration: 50ms
+      coils:
+        c_magnet_lamps: enable
+    - duration: 250ms
+      coils:
+        c_magnet_lamps: disable
+
+show_player:
+  mode_snake_pit_started:
+    snake_pit_sweep:
+      loops: -1
+      speed: 1
+  s_magnet_switch_active:
+    snake_pit_sweep: pause
+    snake_pit_flasher:
+      loops: 5
+      events_when_stopped: show_pit_flasher_end
+
+
+shots:
+  magnet_target:
+    switch: s_magnet_switch
+
+variable_player:
+  s_magnet_switch_active: 
+    score: 50000

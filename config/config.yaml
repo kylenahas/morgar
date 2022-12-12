@@ -21,6 +21,8 @@ ball_devices:
         eject_timeouts: 500ms
 
 drop_targets:
+  drop_1_series:
+    switch: s_drop_1_reset
   drop_1_g:
     switch: s_drop_1_g
   drop_1_o:
@@ -28,6 +30,8 @@ drop_targets:
   drop_1_r:
     switch: s_drop_1_r
 
+  drop_2_series:
+    switch: s_drop_2_reset
   drop_2_g:
     switch: s_drop_2_g
   drop_2_a:
@@ -55,7 +59,18 @@ modes:
   - base
   - top_rollovers
   - number_targets
+  - number_specials
+  - gor_gar
+  - snake_pit
   - tilt
+  - award_credit
+
+
+timed_switches:
+  game_cancel:
+    switch_tags: start
+    time: 5s
+    events_when_active: end_game
 
 virtual_platform_start_active_switches:
     s_outhole
@@ -65,29 +80,51 @@ displays:
     width: 800
     height: 600
 
+segment_displays:
+  display1:
+    number: 1
+  # d_player1:
+  #   number: 1
+  # d_player2:
+  #   number: 2
+  # d_player3:
+  #   number: 3
+  # d_player4:
+  #   number: 4
+  # d_master:
+  #   number: 5
+
+virtual_segment_display_connector:
+  segment_displays: display1
+  # segment_displays: d_player1, d_player2, d_player3, d_player4, d_master
+
+
 slides:
-  segment_displays:
+  window_slide_1:
     widgets:
-      - type: text
-        text: (player1|score)
-        number_grouping: true
-        min_digits: 2
-        font_name: ten_segment
-        color: orange
-        x: 60
-        y: 70
-        font_size: 12
-        anchor_x: right
-        anchor_y: bottom
-        z: 2
-  welcome_slide:
-    widgets:
-      - type: text
-        text: GORGAR SPEAKS!
+      - type: segment_display_emulator
+        name: display1
+        character_count: 6
+        display_type: 7seg
+        character_slant_angle: 0
+        character_spacing: 20
+        segment_width: 0.11
+        segment_interval: 0.04
+        segment_off_color: 4b4c4a30
+        segment_on_color: fe961bff
+        side_bevel_enabled: true
+        dot_enabled: false
+        comma_enabled: false
+        text: "000000"
+        width: 600
+        height: 150
+        y: 100
+
 # show slide on game start
 slide_player:
-  init_done: welcome_slide
-  game_started: segment_displays
+  init_done: window_slide_1
+  game_started: window_slide_1
+  # game_started: segment_displays
 
 switches:
   s_flipper_left:
@@ -208,7 +245,7 @@ switches:
 coils:
   c_trough:
     number: 1
-    default_pulse_ms: 100 
+    default_pulse_ms: 200 
   c_saucer:
     number: 2
     default_pulse_ms: 100
@@ -220,11 +257,18 @@ coils:
     default_pulse_ms: 200
   c_magnet_relay:
     number: 5
+    default_pulse_ms: 200
+    default_hold_power: 0.375
   c_magnet_lamps:
     number: 6
+    default_pulse_ms: 100
+    default_pulse_power: 0.375
+    default_hold_power: 0.375
   # Coils 9-13 are for sound and are not yet implemented
   c_knocker:
     number: 14
+    default_pulse_ms: 100
+    default_pulse_power: 0.375
   c_bumper_top:
     number: 17
   c_bumper_left:
@@ -368,5 +412,10 @@ lights:
   l_bb_high_score:
     number: 8:8
 
-
-
+magnets:
+  snake_pit_magnet:
+    magnet_coil: c_magnet_relay
+    grab_switch: s_magnet_switch
+    release_time: 1.5s
+    enable_events: ball_started
+    release_ball_events: magnet_snake_pit_magnet_grabbed_ball
